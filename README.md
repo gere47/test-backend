@@ -1,8 +1,8 @@
-﻿# School ERP Management System 🏫
+﻿# School ERP Management System 
 
 Enterprise-grade School Management System Backend API built with NestJS, PostgreSQL, and Prisma.
 
-## 🚀 Features
+##  Features
 
 - **Authentication & Authorization** - JWT-based auth with role-based access
 - **User Management** - Complete CRUD operations with role assignment  
@@ -12,7 +12,7 @@ Enterprise-grade School Management System Backend API built with NestJS, Postgre
 - **Rate Limiting** - Protection against abuse
 - **Swagger Documentation** - Interactive API docs
 
-## 🛠 Tech Stack
+## 🛠Tech Stack
 
 - **Framework**: NestJS
 - **Database**: PostgreSQL + Prisma ORM
@@ -22,7 +22,7 @@ Enterprise-grade School Management System Backend API built with NestJS, Postgre
 
 ## 📦 Installation
 
-\\\ash
+\\\ash
 # Clone repository
 git clone https://github.com/your-username/school-erp-backend.git
 
@@ -40,11 +40,11 @@ npx prisma db push
 npm run start:dev
 \\\
 
-## 🌐 API Documentation
+##  API Documentation
 
 Once running, visit: \http://localhost:5000/api/v1/docs\
 
-## 🚀 Deployment
+##  Deployment
 
 ### Render.com
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
@@ -52,7 +52,7 @@ Once running, visit: \http://localhost:5000/api/v1/docs\
 ### Environment Variables
 See \.env.example\ for required variables.
 
-## 📝 API Endpoints
+##  API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -61,7 +61,7 @@ See \.env.example\ for required variables.
 | GET | /api/v1/auth/profile | Get user profile |
 | GET | /api/v1/users | Get all users (Admin) |
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the project
 2. Create your feature branch (\git checkout -b feature/AmazingFeature\)
