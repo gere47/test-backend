@@ -1,4 +1,43 @@
-﻿services:
+﻿# # services:
+# #   - type: web
+# #     name: sophor-erp-school-management
+# #     env: node
+# #     plan: free
+# #     region: oregon
+# #     buildCommand: |
+# #       npm install
+# #       npx prisma generate
+# #       npm run build
+# #     startCommand: npm run start:prod
+# #     envVars:
+# #       - key: NODE_ENV
+# #         value: production
+# #       - key: PORT
+# #         value: 5000
+# #       - key: JWT_SECRET
+# #         generateValue: true
+# #     healthCheckPath: /status
+# #     branch: main
+
+# services:
+#   - type: web
+#     name: sophor-erp-school-management
+#     env: node
+#     plan: free
+#     region: oregon
+#     buildCommand: npm install && npx prisma generate && npm run build
+#     startCommand: npm run start:prod
+#     envVars:
+#       - key: NODE_ENV
+#         value: production
+#       - key: PORT
+#         value: 5000
+#       - key: JWT_SECRET
+#         generateValue: true
+#     healthCheckPath: /status
+#     branch: main
+
+services:
   - type: web
     name: sophor-erp-school-management
     env: node
@@ -17,4 +56,3 @@
       - key: JWT_SECRET
         generateValue: true
     healthCheckPath: /status
-    branch: main
