@@ -11,93 +11,93 @@ export function setupSwagger(app: INestApplication): void {
 
 Welcome to the ERP School Management System API documentation. This API provides comprehensive endpoints for managing all aspects of a school's operations, from student admission to financial management.
 
-### 🔐 Authentication & Authorization
-- **JWT Token-based** authentication system
-- **Role-Based Access Control (RBAC)** with fine-grained permissions
-- **Module-level permissions** for each user role
-- **Session management** with device tracking
+// ### 🔐 Authentication & Authorization
+// - **JWT Token-based** authentication system
+// - **Role-Based Access Control (RBAC)** with fine-grained permissions
+// - **Module-level permissions** for each user role
+// - **Session management** with device tracking
 
-### 👥 User Management & Roles
-- **7 Predefined Roles**: super_admin, admin, teacher, student, parent, accountant, librarian
-- **User registration** with role assignment
-- **Profile management** and password security
-- **Active session tracking** and management
+// ### 👥 User Management & Roles
+// - **7 Predefined Roles**: super_admin, admin, teacher, student, parent, accountant, librarian
+// - **User registration** with role assignment
+// - **Profile management** and password security
+// - **Active session tracking** and management
 
-### 📦 System Modules
-The system is organized into 12 core modules based on the SRS:
+// ### 📦 System Modules
+// The system is organized into 12 core modules based on the SRS:
 
-| Module | Description | Key Features |
-|--------|-------------|--------------|
-| **Dashboard** | System overview and analytics | Real-time metrics, quick actions |
-| **User Management** | Authentication & user management | User CRUD, role assignment, permissions |
-| **Student Admission** | Student enrollment system | Online registration, document management |
-| **Attendance Management** | Student & staff tracking | Daily attendance, reports, notifications |
-| **Grade Management** | Examination & grading system | Mark entry, report cards, analytics |
-| **HR & Payroll** | Staff management & payroll | Employee records, salary processing |
-| **Fee Management** | Financial operations | Fee collection, invoices, accounting |
-| **Library Management** | Library resources management | Book catalog, issue/return, fines |
-| **Timetable Management** | Class scheduling | Automatic scheduling, conflict detection |
-| **Communication Portal** | Messaging system | Notifications, announcements, chats |
-| **Inventory Management** | Asset tracking | Stock management, depreciation |
-| **Reports & Analytics** | Data analysis | Custom reports, dashboards, exports |
+// | Module | Description | Key Features |
+// |--------|-------------|--------------|
+// | **Dashboard** | System overview and analytics | Real-time metrics, quick actions |
+// | **User Management** | Authentication & user management | User CRUD, role assignment, permissions |
+// | **Student Admission** | Student enrollment system | Online registration, document management |
+// | **Attendance Management** | Student & staff tracking | Daily attendance, reports, notifications |
+// | **Grade Management** | Examination & grading system | Mark entry, report cards, analytics |
+// | **HR & Payroll** | Staff management & payroll | Employee records, salary processing |
+// | **Fee Management** | Financial operations | Fee collection, invoices, accounting |
+// | **Library Management** | Library resources management | Book catalog, issue/return, fines |
+// | **Timetable Management** | Class scheduling | Automatic scheduling, conflict detection |
+// | **Communication Portal** | Messaging system | Notifications, announcements, chats |
+// | **Inventory Management** | Asset tracking | Stock management, depreciation |
+// | **Reports & Analytics** | Data analysis | Custom reports, dashboards, exports |
 
-### 🚀 Quick Start Guide
+// ### 🚀 Quick Start Guide
 
-1. **Authentication**
-   - Register a new user or use default credentials
-   - Login to get JWT token
-   - Use token in Authorization header: \`Bearer <your-token>\`
+// 1. **Authentication**
+//    - Register a new user or use default credentials
+//    - Login to get JWT token
+//    - Use token in Authorization header: \`Bearer <your-token>\`
 
-2. **Default Credentials**
-   - **Super Admin**: superadmin / Admin123!
-   - **Admin**: admin / Admin123!
-   - **Teacher**: teacher1 / Teacher123!
+// 2. **Default Credentials**
+//    - **Super Admin**: superadmin / Admin123!
+//    - **Admin**: admin / Admin123!
+//    - **Teacher**: teacher1 / Teacher123!
 
-3. **API Usage**
-   - All endpoints are protected except \`/auth/login\`, \`/auth/register\`, and \`/auth/health\`
-   - Include JWT token in Authorization header for all requests
-   - Check user permissions before accessing module-specific endpoints
+// 3. **API Usage**
+//    - All endpoints are protected except \`/auth/login\`, \`/auth/register\`, and \`/auth/health\`
+//    - Include JWT token in Authorization header for all requests
+//    - Check user permissions before accessing module-specific endpoints
 
-### 🔒 Security Features
-- **JWT tokens** with 24-hour expiration
-- **Password hashing** using bcrypt with 12 rounds
-- **Rate limiting** to prevent abuse
-- **CORS protection** for cross-origin requests
-- **Input validation** using class-validator
-- **Audit logging** for all user actions
+// ### 🔒 Security Features
+// - **JWT tokens** with 24-hour expiration
+// - **Password hashing** using bcrypt with 12 rounds
+// - **Rate limiting** to prevent abuse
+// - **CORS protection** for cross-origin requests
+// - **Input validation** using class-validator
+// - **Audit logging** for all user actions
 
-### 📊 Response Format
-All API responses follow a consistent format:
-\`\`\`json
-{
-  "data": { ... },        // Response data
-  "message": "Success",   // Human-readable message
-  "meta": { ... }         // Pagination metadata (if applicable)
-}
-\`\`\`
+// ### 📊 Response Format
+// All API responses follow a consistent format:
+// \`\`\`json
+// {
+//   "data": { ... },        // Response data
+//   "message": "Success",   // Human-readable message
+//   "meta": { ... }         // Pagination metadata (if applicable)
+// }
+// \`\`\`
 
-### 🛠️ Error Handling
-The API uses standard HTTP status codes:
+// ### 🛠️ Error Handling
+// The API uses standard HTTP status codes:
 
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 201 | Created |
-| 400 | Bad Request - Validation error |
-| 401 | Unauthorized - Invalid token |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Not Found - Resource not found |
-| 409 | Conflict - Resource already exists |
-| 429 | Too Many Requests - Rate limit exceeded |
-| 500 | Internal Server Error |
+// | Code | Description |
+// |------|-------------|
+// | 200 | Success |
+// | 201 | Created |
+// | 400 | Bad Request - Validation error |
+// | 401 | Unauthorized - Invalid token |
+// | 403 | Forbidden - Insufficient permissions |
+// | 404 | Not Found - Resource not found |
+// | 409 | Conflict - Resource already exists |
+// | 429 | Too Many Requests - Rate limit exceeded |
+// | 500 | Internal Server Error |
 
-### 🌐 Deployment
-- **Production URL**: https://your-app.onrender.com
-- **API Base**: \`/api/v1\`
-- **Documentation**: \`/api/docs\`
-- **Health Check**: \`/api/v1/auth/health\`
+// ### 🌐 Deployment
+// - **Production URL**: https://your-app.onrender.com
+// - **API Base**: \`/api/v1\`
+// - **Documentation**: \`/api/docs\`
+// - **Health Check**: \`/api/v1/auth/health\`
 
----
+// ---
 
 *For more details about the system requirements and specifications, refer to the complete Software Requirements Specification (SRS) document.*
     `)

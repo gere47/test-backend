@@ -92,6 +92,7 @@ import { UsersModule } from './modules/users/users.module';
 // import { ModulesMa } from './modules/modules-management/modules.module';
 // FIXED IMPORT - Choose one of these options:
 import { ModulesModule } from './modules/modules-management/modules.module';
+import { StudentsModule } from './modules/students/students.module';
 // OR if that doesn't work, try:
 // import { ModulesModule } from './modules/modules/modules.module';
 
@@ -128,6 +129,8 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     AuthModule,
     UsersModule,
    ModulesModule, // Make sure this matches your import
+  StudentsModule, // Add this
+
   ],
   controllers: [AppController],
   providers: [
