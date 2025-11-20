@@ -42,14 +42,16 @@ model User {
   // New Relations for Additional Modules
   employees        Employee[]
   payrolls         Payroll[]
-  leaveRequests    Leave[]
   approvedLeaves   Leave[]        @relation("ApprovedLeaves")
   feeTransactions  FeeTransaction[]
   libraryMembers   LibraryMember[]
   sentMessages     Message[]      @relation("SentMessages")
   receivedMessages Message[]      @relation("ReceivedMessages")
   announcements    Announcement[]
-  assetAssignments AssetAssignment[]
+  assignedAssets   AssetAssignment[] @relation("AssignedAssets")
+  assignedByAssets AssetAssignment[] @relation("AssignedByAssets")
+  timetables       Timetable[]
+  reports          Report[]
 
   @@map("users")
 }
@@ -178,6 +180,7 @@ model Class {
   exams        Exam[]
   subjects     ClassSubject[]
   timetables   Timetable[]
+  feeStructures FeeStructure[]
 
   @@unique([grade, section, academicYear])
   @@map("classes")
@@ -473,7 +476,7 @@ model Employee {
 
   user        User    @relation(fields: [userId], references: [id])
   payrolls    Payroll[]
-  leaveRequests Leave[]
+  leaveRequests Leave[] @relation("EmployeeLeaves")
 
   @@map("employees")
 }
@@ -518,14 +521,14 @@ model Leave {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  employee    Employee @relation(fields: [employeeId], references: [id])
+  employee    Employee @relation("EmployeeLeaves", fields: [employeeId], references: [id])
   approvedByUser User? @relation("ApprovedLeaves", fields: [approvedBy], references: [id])
 
   @@map("leaves")
 }
 
 // ------------------------------------
-// FEE COLLECTION & ACCOUNTING
+// FEE MANAGEMENT
 // ------------------------------------
 
 model FeeCategory {
@@ -665,12 +668,8 @@ model BookTransaction {
   @@map("book_transactions")
 }
 
-// ============================================
-// PHASE 4: COLLABORATION & INFRASTRUCTURE
-// ============================================
-
 // ------------------------------------
-// TIMETABLE & SCHEDULING
+// TIMETABLE MANAGEMENT
 // ------------------------------------
 
 model Timetable {
@@ -696,7 +695,7 @@ model Timetable {
 }
 
 // ------------------------------------
-// COMMUNICATION PORTAL
+// COMMUNICATION SYSTEM
 // ------------------------------------
 
 model Message {
@@ -740,7 +739,7 @@ model Announcement {
 }
 
 // ------------------------------------
-// INVENTORY & ASSET MANAGEMENT
+// ASSET MANAGEMENT
 // ------------------------------------
 
 model AssetCategory {
@@ -793,16 +792,16 @@ model AssetAssignment {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  asset      Asset @relation(fields: [assetId], references: [id])
-  assignedToUser User @relation(fields: [assignedTo], references: [id])
-  assignedByUser User @relation(fields: [assignedBy], references: [id])
+  asset          Asset @relation(fields: [assetId], references: [id])
+  assignedToUser User  @relation("AssignedAssets", fields: [assignedTo], references: [id])
+  assignedByUser User  @relation("AssignedByAssets", fields: [assignedBy], references: [id])
 
   @@map("asset_assignments")
 }
 
-// ============================================
-// PHASE 5: REPORTS & ANALYTICS
-// ============================================
+// ------------------------------------
+// REPORTS & ANALYTICS
+// ------------------------------------
 
 model Report {
   id          Int       @id @default(autoincrement())
