@@ -1,191 +1,14 @@
-// // import { Injectable, NotFoundException } from '@nestjs/common';
-// // import { PrismaService } from '../../database/prisma.service';
-
-// // @Injectable()
-// // export class ModulesService {
-// //   constructor(private prisma: PrismaService) {}
-
-// //   async getUserModules(userId: number) {
-// //     const user = await this.prisma.user.findUnique({
-// //       where: { id: userId },
-// //       include: {
-// //         role: {
-// //           include: {
-// //             modulePermissions: {
-// //               include: {
-// //                 module: true,
-// //               },
-// //               where: {
-// //                 canView: true,
-// //                 module: {
-// //                   isActive: true,
-// //                 },
-// //               },
-// //             },
-// //           },
-// //         },
-// //       },
-// //     });
-
-// //     if (!user) {
-// //       return [];
-// //     }
-
-// //     // Format modules with permissions
-// //     const modules = user.role.modulePermissions.map((permission) => ({
-// //       id: permission.module.id,
-// //       name: permission.module.name,
-// //       description: permission.module.description,
-// //       path: permission.module.path,
-// //       icon: permission.module.icon,
-// //       order: permission.module.order,
-// //       permissions: {
-// //         canView: permission.canView,
-// //         canCreate: permission.canCreate,
-// //         canEdit: permission.canEdit,
-// //         canDelete: permission.canDelete,
-// //       },
-// //     }));
-
-// //     // Sort by order
-// //     return modules.sort((a, b) => a.order - b.order);
-// //   }
-
-// //   async getAllModules() {
-// //     return this.prisma.module.findMany({
-// //       where: { isActive: true },
-// //       include: {
-// //         permissions: {
-// //           include: {
-// //             role: true,
-// //           },
-// //         },
-// //       },
-// //       orderBy: { order: 'asc' },
-// //     });
-// //   }
-
-// //   async getModuleById(id: number) {
-// //     const module = await this.prisma.module.findUnique({
-// //       where: { id },
-// //       include: {
-// //         permissions: {
-// //           include: {
-// //             role: true,
-// //           },
-// //         },
-// //       },
-// //     });
-
-// //     if (!module) {
-// //       throw new NotFoundException(`Module with ID ${id} not found`);
-// //     }
-
-// //     return module;
-// //   }
-
-// //   async getModulePermissions(moduleId: number) {
-// //     const module = await this.prisma.module.findUnique({
-// //       where: { id: moduleId },
-// //       include: {
-// //         permissions: {
-// //           include: {
-// //             role: true,
-// //           },
-// //         },
-// //       },
-// //     });
-
-// //     if (!module) {
-// //       throw new NotFoundException(`Module with ID ${moduleId} not found`);
-// //     }
-
-// //     return module.permissions;
-// //   }
-
-// //   async updateModulePermissions(moduleId: number, permissions: any[]) {
-// //     // Verify module exists
-// //     const module = await this.prisma.module.findUnique({
-// //       where: { id: moduleId },
-// //     });
-
-// //     if (!module) {
-// //       throw new NotFoundException(`Module with ID ${moduleId} not found`);
-// //     }
-
-// //     const transaction = permissions.map((permission) =>
-// //       this.prisma.modulePermission.upsert({
-// //         where: {
-// //           moduleId_roleId: {
-// //             moduleId,
-// //             roleId: permission.roleId,
-// //           },
-// //         },
-// //         update: {
-// //           canView: permission.canView,
-// //           canCreate: permission.canCreate,
-// //           canEdit: permission.canEdit,
-// //           canDelete: permission.canDelete,
-// //         },
-// //         create: {
-// //           moduleId,
-// //           roleId: permission.roleId,
-// //           canView: permission.canView,
-// //           canCreate: permission.canCreate,
-// //           canEdit: permission.canEdit,
-// //           canDelete: permission.canDelete,
-// //         },
-// //       })
-// //     );
-
-// //     return this.prisma.$transaction(transaction);
-// //   }
-
-// //   async getSystemModules() {
-// //     return this.prisma.module.findMany({
-// //       where: { isSystem: true, isActive: true },
-// //       orderBy: { order: 'asc' },
-// //     });
-// //   }
-
-// //   async getRoleModules(roleId: number) {
-// //     const role = await this.prisma.role.findUnique({
-// //       where: { id: roleId },
-// //       include: {
-// //         modulePermissions: {
-// //           include: {
-// //             module: true,
-// //           },
-// //         },
-// //       },
-// //     });
-
-// //     if (!role) {
-// //       throw new NotFoundException(`Role with ID ${roleId} not found`);
-// //     }
-
-// //     return role.modulePermissions.map(permission => ({
-// //       module: permission.module,
-// //       permissions: {
-// //         canView: permission.canView,
-// //         canCreate: permission.canCreate,
-// //         canEdit: permission.canEdit,
-// //         canDelete: permission.canDelete,
-// //       },
-// //     }));
-// //   }
-// // }
-
 // import { Injectable, NotFoundException } from '@nestjs/common';
 // import { PrismaService } from '../../database/prisma.service';
+// import { InternalServerErrorException } from '@nestjs/common';
 
 // @Injectable()
 // export class ModulesService {
 //   constructor(private prisma: PrismaService) {}
 
-//   async getUserModules(userId: number) {
+//   async getUserModules(userId: string) {
 //     const user = await this.prisma.user.findUnique({
-//       where: { id: userId },
+//       where: { id: Number(userId) },
 //       include: {
 //         role: {
 //           include: {
@@ -209,7 +32,6 @@
 //       return [];
 //     }
 
-//     // Format modules with permissions
 //     const modules = user.role.modulePermissions.map((permission) => ({
 //       id: permission.module.id,
 //       name: permission.module.name,
@@ -225,7 +47,6 @@
 //       },
 //     }));
 
-//     // Sort by order
 //     return modules.sort((a, b) => a.order - b.order);
 //   }
 
@@ -254,9 +75,9 @@
 //     };
 //   }
 
-//   async getModuleById(id: number) {
+//   async getModuleById(id: string) {
 //     const module = await this.prisma.module.findUnique({
-//       where: { id },
+//       where: { id: Number(id) },
 //       include: {
 //         permissions: {
 //           include: {
@@ -281,9 +102,9 @@
 //     };
 //   }
 
-//   async getModulePermissions(moduleId: number) {
+//   async getModulePermissions(moduleId: string) {
 //     const module = await this.prisma.module.findUnique({
-//       where: { id: moduleId },
+//       where: { id: Number(moduleId) },
 //       include: {
 //         permissions: {
 //           include: {
@@ -309,48 +130,58 @@
 //     };
 //   }
 
-//   async updateModulePermissions(moduleId: number, permissions: any[]) {
-//     // Verify module exists
+//   async updateModulePermissions(moduleId: number, permissions: any[]): Promise<any> {
+//   try {
 //     const module = await this.prisma.module.findUnique({
-//       where: { id: moduleId },
+//       where: { id: moduleId }
 //     });
 
 //     if (!module) {
-//       throw new NotFoundException(`Module with ID ${moduleId} not found`);
+//       throw new NotFoundException('Module not found');
 //     }
 
-//     const transaction = permissions.map((permission) =>
-//       this.prisma.modulePermission.upsert({
-//         where: {
-//           moduleId_roleId: {
-//             moduleId,
-//             roleId: permission.roleId,
-//           },
+//     // Update permissions for each role
+//     for (const permission of permissions) {
+//       const role = await this.prisma.role.findUnique({
+//         where: { id: permission.roleId }
+//       });
+
+//       if (!role) {
+//         throw new NotFoundException(`Role with ID ${permission.roleId} not found`);
+//       }
+
+//       await this.prisma.modulePermission.upsert({
+//         where: { 
+//     roleId_moduleId: { // ✅ CORRECT CONSTRAINT NAME
+//             roleId: role.id,
+//             moduleId: module.id
+//           }
 //         },
 //         update: {
 //           canView: permission.canView,
 //           canCreate: permission.canCreate,
 //           canEdit: permission.canEdit,
-//           canDelete: permission.canDelete,
+//           canDelete: permission.canDelete
 //         },
 //         create: {
-//           moduleId,
-//           roleId: permission.roleId,
+//           roleId: role.id,
+//           moduleId: module.id,
 //           canView: permission.canView,
 //           canCreate: permission.canCreate,
 //           canEdit: permission.canEdit,
-//           canDelete: permission.canDelete,
-//         },
-//       })
-//     );
+//           canDelete: permission.canDelete
+//         }
+//       });
+//     }
 
-//     await this.prisma.$transaction(transaction);
-
-//     return {
-//       message: 'Module permissions updated successfully',
-//       data: permissions,
-//     };
+//     return { message: 'Module permissions updated successfully' };
+//   } catch (error) {
+//     if (error instanceof NotFoundException) {
+//       throw error;
+//     }
+//     throw new InternalServerErrorException('Failed to update module permissions');
 //   }
+// }
 
 //   async getSystemModules() {
 //     const modules = await this.prisma.module.findMany({
@@ -364,9 +195,9 @@
 //     };
 //   }
 
-//   async getRoleModules(roleId: number) {
+//   async getRoleModules(roleId: string) {
 //     const role = await this.prisma.role.findUnique({
-//       where: { id: roleId },
+//       where: { id: Number(roleId) },
 //       include: {
 //         modulePermissions: {
 //           include: {
@@ -438,7 +269,7 @@
 //   }
 // }
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -447,7 +278,7 @@ export class ModulesService {
 
   async getUserModules(userId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: Number(userId) },
       include: {
         role: {
           include: {
@@ -516,7 +347,7 @@ export class ModulesService {
 
   async getModuleById(id: string) {
     const module = await this.prisma.module.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: {
         permissions: {
           include: {
@@ -543,7 +374,7 @@ export class ModulesService {
 
   async getModulePermissions(moduleId: string) {
     const module = await this.prisma.module.findUnique({
-      where: { id: moduleId },
+      where: { id: Number(moduleId) },
       include: {
         permissions: {
           include: {
@@ -569,46 +400,57 @@ export class ModulesService {
     };
   }
 
-  async updateModulePermissions(moduleId: string, permissions: any[]) {
-    const module = await this.prisma.module.findUnique({
-      where: { id: moduleId },
-    });
+  async updateModulePermissions(moduleId: number, permissions: any[]): Promise<any> {
+    try {
+      const module = await this.prisma.module.findUnique({
+        where: { id: moduleId }
+      });
 
-    if (!module) {
-      throw new NotFoundException(`Module with ID ${moduleId} not found`);
-    }
+      if (!module) {
+        throw new NotFoundException('Module not found');
+      }
 
-    const transaction = permissions.map((permission) =>
-      this.prisma.modulePermission.upsert({
-        where: {
-          roleId_moduleId: {
-            roleId: permission.roleId,
-            moduleId,
+      // Update permissions for each role
+      for (const permission of permissions) {
+        const role = await this.prisma.role.findUnique({
+          where: { id: permission.roleId }
+        });
+
+        if (!role) {
+          throw new NotFoundException(`Role with ID ${permission.roleId} not found`);
+        }
+
+        await this.prisma.modulePermission.upsert({
+          where: { 
+            roleId_moduleId: {
+              roleId: role.id,
+              moduleId: module.id
+            }
           },
-        },
-        update: {
-          canView: permission.canView,
-          canCreate: permission.canCreate,
-          canEdit: permission.canEdit,
-          canDelete: permission.canDelete,
-        },
-        create: {
-          moduleId,
-          roleId: permission.roleId,
-          canView: permission.canView,
-          canCreate: permission.canCreate,
-          canEdit: permission.canEdit,
-          canDelete: permission.canDelete,
-        },
-      })
-    );
+          update: {
+            canView: permission.canView,
+            canCreate: permission.canCreate,
+            canEdit: permission.canEdit,
+            canDelete: permission.canDelete
+          },
+          create: {
+            roleId: role.id,
+            moduleId: module.id,
+            canView: permission.canView,
+            canCreate: permission.canCreate,
+            canEdit: permission.canEdit,
+            canDelete: permission.canDelete
+          }
+        });
+      }
 
-    await this.prisma.$transaction(transaction);
-
-    return {
-      message: 'Module permissions updated successfully',
-      data: permissions,
-    };
+      return { message: 'Module permissions updated successfully' };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update module permissions');
+    }
   }
 
   async getSystemModules() {
@@ -625,7 +467,7 @@ export class ModulesService {
 
   async getRoleModules(roleId: string) {
     const role = await this.prisma.role.findUnique({
-      where: { id: roleId },
+      where: { id: Number(roleId) },
       include: {
         modulePermissions: {
           include: {

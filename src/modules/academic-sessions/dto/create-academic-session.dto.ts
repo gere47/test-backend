@@ -1,73 +1,59 @@
-
 // import { IsString, IsDate, IsBoolean, IsOptional } from 'class-validator';
 // import { Type } from 'class-transformer';
+// import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // export class CreateAcademicSessionDto {
+//   @ApiProperty({ description: 'Academic session name', example: '2024-2025' })
 //   @IsString()
 //   name: string;
 
+//   @ApiProperty({ description: 'Start date', example: '2024-04-01' })
 //   @IsDate()
 //   @Type(() => Date)
 //   startDate: Date;
 
+//   @ApiProperty({ description: 'End date', example: '2025-03-31' })
 //   @IsDate()
 //   @Type(() => Date)
 //   endDate: Date;
 
-//   @IsString()
+//   @ApiPropertyOptional({ description: 'Whether admission is open', default: true })
 //   @IsOptional()
-//   description?: string;
-
 //   @IsBoolean()
-//   @IsOptional()
-//   isActive?: boolean;
-// }
+//   admissionOpen?: boolean;
 
-// export class UpdateAcademicSessionDto {
-//   @IsString()
+//   @ApiPropertyOptional({ description: 'Whether session is active', default: true })
 //   @IsOptional()
-//   name?: string;
-
-//   @IsDate()
-//   @Type(() => Date)
-//   @IsOptional()
-//   startDate?: Date;
-
-//   @IsDate()
-//   @Type(() => Date)
-//   @IsOptional()
-//   endDate?: Date;
-
-//   @IsString()
-//   @IsOptional()
-//   description?: string;
-
 //   @IsBoolean()
-//   @IsOptional()
 //   isActive?: boolean;
 // }
 
 import { IsString, IsDate, IsBoolean, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateAcademicSessionDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Academic session name', example: '2024-2025' })
   @IsString()
   name: string;
 
-  @ApiProperty()
-  @Type(() => Date)
+  @ApiProperty({ description: 'Start date', example: '2024-04-01' })
   @IsDate()
+  @Type(() => Date)
   startDate: Date;
 
-  @ApiProperty()
-  @Type(() => Date)
+  @ApiProperty({ description: 'End date', example: '2025-03-31' })
   @IsDate()
+  @Type(() => Date)
   endDate: Date;
 
-  @ApiProperty({ default: false })
-  @IsBoolean()
+  @ApiPropertyOptional({ description: 'Whether admission is open', default: true })
   @IsOptional()
-  isCurrent?: boolean;
+  @IsBoolean()
+  admissionOpen?: boolean;
+
+  @ApiPropertyOptional({ description: 'Whether session is active', default: true })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

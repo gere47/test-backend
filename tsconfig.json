@@ -1,7 +1,6 @@
 {
     "$schema": "https://www.schemastore.org/tsconfig",
 
- 
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,

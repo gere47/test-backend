@@ -506,6 +506,6 @@ export class ModulesController {
     @Param('id') id: string,
     @Body() permissions: any[],
   ) {
-    return this.modulesService.updateModulePermissions(id, permissions);
+    return this.modulesService.updateModulePermissions(Number(id), permissions);
   }
 }

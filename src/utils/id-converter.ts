@@ -1,9 +1,6 @@
-export class IdConverter {
-  static toString(id: number | string): string {
-    return id.toString();
+export function convertId(id: string | number): number {
+  if (typeof id === 'string') {
+    return parseInt(id, 10);
   }
-
-  static toNumber(id: string | number): number {
-    return typeof id === 'string' ? parseInt(id, 10) : id;
-  }
+  return id;
 }

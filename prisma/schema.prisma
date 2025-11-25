@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,385 +10,288 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// PHASE 1: AUTHENTICATION & AUTHORIZATION
-// ============================================
-
 model User {
-  id                      String   @id @default(cuid())
-  username                String   @unique
-  email                   String   @unique
-  passwordHash            String
-  firstName               String?
-  lastName                String?
-  phone                   String?
-  roleId                  String
-  isActive                Boolean  @default(true)
-  isVerified              Boolean  @default(false)
-  lastLoginAt             DateTime?
-  lastLogin               DateTime?
-  passwordChangedAt       DateTime @default(now())
-  failedLoginAttempts     Int      @default(0)
-  lockedUntil             DateTime?
-  status                  String   @default("active")
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  deletedAt               DateTime?
-  admissionLogs AdmissionLog[]
-
-
-  // Relations
-  role                    Role     @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  sessions                UserSession[]
-  auditLogs               AuditLog[]
-  
-  // Phase 2 Relations
-  classesAsTeacher        Class[]        @relation("ClassTeacher")
-  subjectsTeaching        ClassSubject[] @relation("SubjectTeacher")
-  markedAttendance        Attendance[]   @relation("MarkedAttendance")
-  enteredResults          ExamResult[]   @relation("EnteredResults")
-  verifiedResults         ExamResult[]   @relation("VerifiedResults")
-  student                 Student?
-
-  // New Relations for Additional Modules
-  employees               Employee[]
-  payrolls                Payroll[]
-  approvedLeaves          Leave[]           @relation("ApprovedLeaves")
-  feeTransactions         FeeTransaction[]
-  libraryMembers          LibraryMember[]
-  sentMessages            Message[]         @relation("SentMessages")
-  receivedMessages        Message[]         @relation("ReceivedMessages")
-  announcements           Announcement[]
-  assignedAssets          AssetAssignment[] @relation("AssignedAssets")
-  assignedByAssets        AssetAssignment[] @relation("AssignedByAssets")
-  timetables              Timetable[]
-  reports                 Report[]
-
-  @@map("users")
-}
-
-model Role {
-  id           String   @id @default(cuid())
-  name         String   @unique
-  displayName  String
-  description  String?
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  phone        String?
+  roleId       Int
+  role         Role     @relation(fields: [roleId], references: [id])
   isActive     Boolean  @default(true)
-  isSystem     Boolean  @default(false)
-  permissions  Json?
+  lastLogin    DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
-  users        User[]
-  modulePermissions ModulePermission[]
+  students Student[]
+  classes  Class[]  @relation("ClassTeacher")
+  studentDocuments StudentDocument[] @relation("UploadedStudentDocuments")
+  examResults      ExamResult[]      @relation("EnteredResults")
+  verifiedResults  ExamResult[]      @relation("VerifiedResults")
+  recordedAttendances Attendance[] @relation("RecordedAttendances")
+  createdExams        Exam[]       @relation("CreatedExams")
   
-  @@map("roles")
+  // Add missing opposite relations for new models
+  sessions  UserSession[]
+  auditLogs AuditLog[]
 }
 
-model UserSession {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  isActive  Boolean  @default(true)
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("user_sessions")
-}
-
-model AuditLog {
-  id          String   @id @default(cuid())
-  userId      String
-  action      String
-  resource    String
-  resourceId  String?
-  details     Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("audit_logs")
-}
-
-model Module {
-  id          String   @id @default(cuid())
+model Role {
+  id          Int      @id @default(autoincrement())
   name        String   @unique
-  displayName String
   description String?
-  path        String
-  icon        String?
-  isActive    Boolean  @default(true)
+  permissions Json?
   isSystem    Boolean  @default(false)
-  order       Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
+  users User[]
+  modulePermissions ModulePermission[]  // Add this for ModulePermission relation
+}
+
+model AcademicSession {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  admissionOpen Boolean  @default(false)
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  students Student[]
+  classes  Class[]
+  admissionSessions AdmissionSession[]
+}
+
+model AdmissionSession {
+  id                Int      @id @default(autoincrement())
+  name              String
+  academicSessionId Int
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  academicSession   AcademicSession @relation(fields: [academicSessionId], references: [id])
+  admissionClasses  AdmissionClass[]
+}
+
+model AdmissionClass {
+  id                  Int              @id @default(autoincrement())
+  admissionSessionId  Int
+  classId             Int
+  availableSeats      Int
+  appliedSeats        Int              @default(0)
+  status              String           @default("open")
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  // Relations
+  admissionSession AdmissionSession @relation(fields: [admissionSessionId], references: [id])
+  class            Class            @relation(fields: [classId], references: [id])
+}
+
+model Class {
+  id              Int      @id @default(autoincrement())
+  name            String
+  section         String?
+  capacity        Int?
+  sessionId       Int
+  classTeacherId  Int?
+  roomNumber      String?
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  session        AcademicSession @relation(fields: [sessionId], references: [id])
+  classTeacher   User?           @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+  students       Student[]
+  admissionClasses AdmissionClass[]
+  attendances    Attendance[]
+  exams          Exam[]
+}
+
+model Student {
+  id                  Int      @id @default(autoincrement())
+  studentId           String   @unique
+  userId              Int?     @unique
+  admissionNumber     String?
+  admissionDate       DateTime?
+  firstName           String
+  lastName            String
+  dateOfBirth         DateTime
+  gender              String
+  email               String   @unique
+  phone               String   @unique
+  address             String?
+  city                String?
+  state               String?
+  pincode             String?
+  nationality         String?
+  guardianName        String?
+  guardianRelation    String?
+  guardianEmail       String?
+  guardianPhone       String?
+  guardianOccupation  String?
+  classId             Int?
+  sessionId           Int?
+  status              String?  @default("Active")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  user                User?                 @relation(fields: [userId], references: [id])
+  class               Class?                @relation(fields: [classId], references: [id])
+  session             AcademicSession?      @relation(fields: [sessionId], references: [id])
+  educationalBackgrounds EducationalBackground[]
+  documents           StudentDocument[]
+  attendances         Attendance[]
+  examResults         ExamResult[]
+}
+
+model EducationalBackground {
+  id              Int      @id @default(autoincrement())
+  studentId       Int
+  institution     String
+  qualification   String
+  yearCompleted   Int
+  percentage      Float?
+  board           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model StudentDocument {
+  id            Int      @id @default(autoincrement())
+  studentId     Int
+  documentType  String
+  fileName      String
+  fileUrl       String
+  fileSize      Int
+  mimeType      String
+  uploadedBy    Int
+  uploadedAt    DateTime @default(now())
+  status        String   @default("active")
+
+  // Relations
+  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  uploadedByUser User  @relation("UploadedStudentDocuments", fields: [uploadedBy], references: [id])
+}
+
+model Attendance {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  classId     Int
+  date        DateTime
+  status      String   // present, absent, late, half-day
+  remarks     String?
+  recordedBy  Int
+  recordedAt  DateTime @default(now())
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+  class   Class   @relation(fields: [classId], references: [id])
+  recordedByUser User @relation("RecordedAttendances", fields: [recordedBy], references: [id])
+}
+
+// ========== AUTHENTICATION & AUTHORIZATION MODELS ==========
+
+model Module {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  path        String?
+  icon        String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   permissions ModulePermission[]
-  
+
   @@map("modules")
 }
 
 model ModulePermission {
-  id        String   @id @default(cuid())
-  roleId    String
-  moduleId  String
+  id        Int      @id @default(autoincrement())
+  roleId    Int
+  moduleId  Int
   canView   Boolean  @default(false)
   canCreate Boolean  @default(false)
   canEdit   Boolean  @default(false)
   canDelete Boolean  @default(false)
-  canExport Boolean  @default(false)
+  canManage Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id])
+  module Module @relation(fields: [moduleId], references: [id])
 
   @@unique([roleId, moduleId])
   @@map("module_permissions")
 }
 
-// ============================================
-// PHASE 2: ACADEMIC CORE MODULES
-// ============================================
+model UserSession {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  sessionToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-model AcademicSession {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  startDate   DateTime
-  endDate     DateTime
-  isActive    Boolean  @default(true)
-  isCurrent   Boolean  @default(false)  // Add this line
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id])
 
-  students Student[]
-  classes  Class[]
-
-  @@map("academic_sessions")
+  @@map("user_sessions")
 }
 
-model Class {
-  id              String   @id @default(cuid())
-  name            String
-  grade           Int
-  section         String
-  academicYear    String
-  sessionId       String
-  capacity        Int      @default(40)
-  currentStrength Int      @default(0)
-  classTeacherId  String?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  session      AcademicSession @relation(fields: [sessionId], references: [id])
-  classTeacher User?           @relation("ClassTeacher", fields: [classTeacherId], references: [id])
-  students     Student[]
-  attendances  Attendance[]
-  exams        Exam[]
-  subjects     ClassSubject[]
-  timetables   Timetable[]
-  feeStructures FeeStructure[]
-
-  @@unique([grade, section, academicYear])
-  @@map("classes")
-}
-
-model Student {
-  id                  String   @id @default(cuid())
-  studentId           String   @unique
-  userId              String   @unique
-  admissionNumber     String   @unique
-  admissionDate       DateTime @default(now())
-  classId             String
-  sessionId           String
-  rollNumber          String?
-
-  // Personal Information
-  firstName           String
-  lastName            String
-  dateOfBirth         DateTime
-  gender              String
-  bloodGroup          String?
-  nationality         String   @default("Ethiopian")
-  religion            String?
-  category            String?
-
-  // Contact Information
-  email    String?
-  phone    String?
-  address  String?
-  city     String?
-  state    String?
-  pincode  String?
-
-  // Guardian Information
-  guardianName       String
-  guardianRelation   String
-  guardianPhone      String
-  guardianEmail      String?
-  guardianOccupation String?
-  guardianIncome     Decimal? @db.Decimal(10, 2)
-
-  // Previous Education
-  previousSchool     String?
-  previousClass      String?
-  previousPercentage Decimal? @db.Decimal(5, 2)
-  tcNumber           String?
-  tcDate             DateTime?
-
-  // Health Information
-  medicalConditions String?
-  allergies         String?
-  emergencyContact  String?
-
-  // Documents
-  photoUrl            String?
-  birthCertificateUrl String?
-  tcUrl               String?
-  aadharUrl           String?
-
-  // Status
-  status   String  @default("Active")
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user        User            @relation(fields: [userId], references: [id])
-  class       Class           @relation(fields: [classId], references: [id])
-  session     AcademicSession @relation(fields: [sessionId], references: [id])
-  attendances Attendance[]
-  examResults ExamResult[]
-  feePayments FeeTransaction[]
-  libraryMember LibraryMember?
-
-  admissionTestMarks    Decimal? @db.Decimal(5, 2)  // FR1.3
-  admissionTestRank     Int?                        // FR1.3
-  admissionRemarks      String?                     // FR1.3
-  
-  // Document URLs for FR1.6
-  idProofUrl           String?                     // ID Proof
-  transcriptUrl        String?                     // Transcripts
-  medicalCertificateUrl String?                    // Medical Certificate
-  otherDocuments       String[]                    // Other scanned documents
-
-  // Admission history and logs (FR1.9)
-  admissionStage       String   @default("Applied") // Applied, Approved, Registered
-  
-  // Automatic class assignment tracking (FR1.7)
-  assignedAutomatically Boolean @default(false)
-  
-  // Confirmation and receipt tracking (FR1.10)
-  confirmationNumber   String?
-  receiptGenerated     Boolean  @default(false)
-  admissionLogs AdmissionLog[]
-
-
-  @@map("students")
-}
-
-
-model AdmissionLog {
-  id          String   @id @default(cuid())
-  studentId   String
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
   action      String
-  details     Json?
-  performedBy String
-  createdAt   DateTime @default(now())
-
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [performedBy], references: [id])
-
-  @@map("admission_logs")
-}
-
-// ATTENDANCE MODELS
-model Attendance {
-  id        String   @id @default(cuid())
-  studentId String
-  classId   String
-  date      DateTime @db.Date
-  status    String
-  period    Int?
-  markedBy  String
-  remarks   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  student      Student @relation(fields: [studentId], references: [id])
-  class        Class   @relation(fields: [classId], references: [id])
-  markedByUser User    @relation("MarkedAttendance", fields: [markedBy], references: [id])
-
-  @@unique([studentId, date, period])
-  @@index([classId, date])
-  @@index([studentId, date])
-  @@map("attendances")
-}
-
-model Holiday {
-  id          String   @id @default(cuid())
-  name        String
-  date        DateTime @db.Date
-  type        String
+  entityType  String
+  entityId    Int
   description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([date])
-  @@map("holidays")
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id])
 }
 
-// SUBJECT & EXAM MODELS
+// ========== EXAM MODELS ==========
+
 model Subject {
-  id          String   @id @default(cuid())
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
   code        String   @unique
-  name        String
   description String?
-  type        String
-  maxMarks    Int      @default(100)
-  passMarks   Int      @default(35)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  classSubjects ClassSubject[]
-  examSubjects  ExamSubject[]
-  timetables    Timetable[]
-
-  @@map("subjects")
-}
-
-model ClassSubject {
-  id        String   @id @default(cuid())
-  classId   String
-  subjectId String
-  teacherId String?
-  order     Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  class   Class   @relation(fields: [classId], references: [id])
-  subject Subject @relation(fields: [subjectId], references: [id])
-  teacher User?   @relation("SubjectTeacher", fields: [teacherId], references: [id])
-
-  @@unique([classId, subjectId])
-  @@map("class_subjects")
+  examSubjects ExamSubject[]
+  examResults  ExamResult[]
 }
 
 model ExamType {
-  id          String   @id @default(cuid())
+  id          Int      @id @default(autoincrement())
   name        String   @unique
   description String?
   weightage   Decimal  @db.Decimal(5, 2)
@@ -400,10 +306,10 @@ model ExamType {
 }
 
 model Exam {
-  id           String   @id @default(cuid())
+  id           Int      @id @default(autoincrement())
   name         String
-  examTypeId   String
-  classId      String
+  examTypeId   Int
+  classId      Int
   academicYear String
   term         String
   startDate    DateTime
@@ -416,6 +322,8 @@ model Exam {
 
   examType     ExamType      @relation(fields: [examTypeId], references: [id])
   class        Class         @relation(fields: [classId], references: [id])
+  createdBy    Int
+  createdByUser User         @relation("CreatedExams", fields: [createdBy], references: [id])
   examSubjects ExamSubject[]
   examResults  ExamResult[]
 
@@ -424,9 +332,9 @@ model Exam {
 }
 
 model ExamSubject {
-  id             String   @id @default(cuid())
-  examId         String
-  subjectId      String
+  id             Int      @id @default(autoincrement())
+  examId         Int
+  subjectId      Int
   examDate       DateTime
   startTime      String
   endTime        String
@@ -450,10 +358,10 @@ model ExamSubject {
 }
 
 model ExamResult {
-  id             String   @id @default(cuid())
-  examId         String
-  studentId      String
-  subjectId      String
+  id             Int      @id @default(autoincrement())
+  examId         Int
+  studentId      Int
+  subjectId      Int
   theoryMarks    Decimal? @db.Decimal(5, 2)
   practicalMarks Decimal? @db.Decimal(5, 2)
   totalMarks     Decimal  @db.Decimal(5, 2)
@@ -462,14 +370,15 @@ model ExamResult {
   grade          String
   remarks        String?
   isAbsent       Boolean  @default(false)
-  enteredBy      String
-  verifiedBy     String?
+  enteredBy      Int
+  verifiedBy     Int?
   isVerified     Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   exam           Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
   student        Student @relation(fields: [studentId], references: [id])
+  subject        Subject @relation(fields: [subjectId], references: [id])
   enteredByUser  User    @relation("EnteredResults", fields: [enteredBy], references: [id])
   verifiedByUser User?   @relation("VerifiedResults", fields: [verifiedBy], references: [id])
 
@@ -479,7 +388,7 @@ model ExamResult {
 }
 
 model GradeScale {
-  id          String   @id @default(cuid())
+  id          Int      @id @default(autoincrement())
   grade       String   @unique
   minPercent  Decimal  @db.Decimal(5, 2)
   maxPercent  Decimal  @db.Decimal(5, 2)
@@ -491,368 +400,3 @@ model GradeScale {
 
   @@map("grade_scales")
 }
-
-// ============================================
-// PHASE 3: ADMINISTRATIVE & OPERATIONAL CORE
-// ============================================
-
-// HR & PAYROLL MODELS
-model Employee {
-  id              String    @id @default(cuid())
-  employeeId      String    @unique
-  userId          String    @unique
-  designation     String
-  department      String
-  employeeType    String
-  joiningDate     DateTime
-  salary          Decimal   @db.Decimal(10, 2)
-  bankAccount     String?
-  ifscCode        String?
-  panNumber       String?
-  aadharNumber    String?
-  qualifications String?
-  experience      String?
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user        User    @relation(fields: [userId], references: [id])
-  payrolls    Payroll[]
-  leaveRequests Leave[] @relation("EmployeeLeaves")
-
-  @@map("employees")
-}
-
-model Payroll {
-  id              String   @id @default(cuid())
-  employeeId      String
-  month           Int
-  year            Int
-  basicSalary     Decimal  @db.Decimal(10, 2)
-  allowances      Decimal  @db.Decimal(10, 2)
-  deductions      Decimal  @db.Decimal(10, 2)
-  netSalary       Decimal  @db.Decimal(10, 2)
-  workingDays     Int
-  presentDays     Int
-  paidDays        Int
-  status          String   @default("Pending")
-  processedBy     String
-  processedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  employee    Employee @relation(fields: [employeeId], references: [id])
-  processedByUser User  @relation(fields: [processedBy], references: [id])
-
-  @@unique([employeeId, month, year])
-  @@map("payrolls")
-}
-
-model Leave {
-  id           String   @id @default(cuid())
-  employeeId   String
-  leaveType    String
-  startDate    DateTime
-  endDate      DateTime
-  totalDays    Int
-  reason       String
-  status       String   @default("Pending")
-  approvedBy   String?
-  approvedAt   DateTime?
-  remarks      String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  employee    Employee @relation("EmployeeLeaves", fields: [employeeId], references: [id])
-  approvedByUser User? @relation("ApprovedLeaves", fields: [approvedBy], references: [id])
-
-  @@map("leaves")
-}
-
-// FEE MANAGEMENT MODELS
-model FeeCategory {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  amount      Decimal  @db.Decimal(10, 2)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  feeStructures FeeStructure[]
-
-  @@map("fee_categories")
-}
-
-model FeeStructure {
-  id            String   @id @default(cuid())
-  classId       String
-  feeCategoryId String
-  academicYear  String
-  term          String
-  amount        Decimal  @db.Decimal(10, 2)
-  dueDate       DateTime
-  lateFee       Decimal? @db.Decimal(10, 2)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  class       Class       @relation(fields: [classId], references: [id])
-  feeCategory FeeCategory @relation(fields: [feeCategoryId], references: [id])
-  transactions FeeTransaction[]
-
-  @@unique([classId, feeCategoryId, academicYear, term])
-  @@map("fee_structures")
-}
-
-model FeeTransaction {
-  id               String   @id @default(cuid())
-  studentId        String
-  feeStructureId   String
-  transactionId    String   @unique
-  amount           Decimal  @db.Decimal(10, 2)
-  paymentDate      DateTime
-  paymentMode      String
-  referenceNumber  String?
-  status           String   @default("Paid")
-  collectedBy      String
-  remarks          String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  student      Student      @relation(fields: [studentId], references: [id])
-  feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id])
-  collectedByUser User      @relation(fields: [collectedBy], references: [id])
-  ledgerEntry  AccountLedger?
-
-  @@map("fee_transactions")
-}
-
-model AccountLedger {
-  id              String   @id @default(cuid())
-  transactionId   String?  @unique
-  transactionType String
-  amount          Decimal  @db.Decimal(10, 2)
-  debitCredit     String
-  balance         Decimal  @db.Decimal(10, 2)
-  description     String
-  reference       String?
-  date            DateTime
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  feeTransaction FeeTransaction? @relation(fields: [transactionId], references: [id])
-
-  @@map("account_ledgers")
-}
-
-// LIBRARY MODELS
-model Book {
-  id          String   @id @default(cuid())
-  isbn        String?  @unique
-  title       String
-  author      String
-  publisher   String?
-  edition     String?
-  category    String
-  price       Decimal? @db.Decimal(10, 2)
-  totalCopies Int
-  available   Int
-  location    String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  transactions BookTransaction[]
-
-  @@map("books")
-}
-
-model LibraryMember {
-  id        String   @id @default(cuid())
-  studentId String?  @unique
-  userId    String?  @unique
-  memberId  String   @unique
-  joinedAt  DateTime @default(now())
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  student     Student?         @relation(fields: [studentId], references: [id])
-  user        User?            @relation(fields: [userId], references: [id])
-  transactions BookTransaction[]
-
-  @@map("library_members")
-}
-
-model BookTransaction {
-  id          String    @id @default(cuid())
-  bookId      String
-  memberId    String
-  issueDate   DateTime
-  dueDate     DateTime
-  returnDate  DateTime?
-  fineAmount  Decimal?  @db.Decimal(10, 2)
-  status      String    @default("Issued")
-  remarks     String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  book   Book          @relation(fields: [bookId], references: [id])
-  member LibraryMember @relation(fields: [memberId], references: [id])
-
-  @@map("book_transactions")
-}
-
-// TIMETABLE MODEL
-model Timetable {
-  id        String   @id @default(cuid())
-  classId   String
-  subjectId String
-  teacherId String?
-  dayOfWeek Int
-  period    Int
-  startTime String
-  endTime   String
-  room      String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  class   Class   @relation(fields: [classId], references: [id])
-  subject Subject @relation(fields: [subjectId], references: [id])
-  teacher User?   @relation(fields: [teacherId], references: [id])
-
-  @@unique([classId, dayOfWeek, period])
-  @@map("timetables")
-}
-
-// COMMUNICATION MODELS
-model Message {
-  id           String    @id @default(cuid())
-  senderId     String
-  receiverId   String
-  subject      String?
-  content      String    @db.Text
-  messageType  String
-  isRead       Boolean   @default(false)
-  priority     String    @default("Normal")
-  parentId     String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  sender       User    @relation("SentMessages", fields: [senderId], references: [id])
-  receiver     User    @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  parent       Message? @relation("MessageReplies", fields: [parentId], references: [id])
-  replies      Message[] @relation("MessageReplies")
-
-  @@map("messages")
-}
-
-model Announcement {
-  id          String    @id @default(cuid())
-  title       String
-  content     String    @db.Text
-  authorId    String
-  targetType  String
-  targetIds   Json?
-  isActive    Boolean   @default(true)
-  startDate   DateTime
-  endDate     DateTime?
-  priority    String    @default("Normal")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  author User @relation(fields: [authorId], references: [id])
-
-  @@map("announcements")
-}
-
-// ASSET MANAGEMENT MODELS
-model AssetCategory {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  assets Asset[]
-
-  @@map("asset_categories")
-}
-
-model Asset {
-  id              String    @id @default(cuid())
-  assetId         String    @unique
-  name            String
-  categoryId      String
-  description     String?
-  purchaseDate    DateTime
-  purchasePrice   Decimal   @db.Decimal(10, 2)
-  currentValue    Decimal   @db.Decimal(10, 2)
-  depreciationRate Decimal? @db.Decimal(5, 2)
-  location        String?
-  status          String    @default("Available")
-  warrantyPeriod  Int?
-  supplier        String?
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  category    AssetCategory   @relation(fields: [categoryId], references: [id])
-  assignments AssetAssignment[]
-
-  @@map("assets")
-}
-
-model AssetAssignment {
-  id          String    @id @default(cuid())
-  assetId     String
-  assignedTo  String
-  assignedBy  String
-  assignedAt  DateTime
-  returnDate  DateTime?
-  returnedAt  DateTime?
-  condition   String?
-  remarks     String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  asset          Asset @relation(fields: [assetId], references: [id])
-  assignedToUser User  @relation("AssignedAssets", fields: [assignedTo], references: [id])
-  assignedByUser User  @relation("AssignedByAssets", fields: [assignedBy], references: [id])
-
-  @@map("asset_assignments")
-}
-
-// REPORTS MODEL
-model Report {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  reportType  String
-  parameters  Json?
-  generatedBy String
-  filePath    String?
-  status      String    @default("Pending")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  generatedByUser User @relation(fields: [generatedBy], references: [id])
-
-  @@map("reports")
-}
-
-model Dashboard {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  layout      Json
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("dashboards")
-}
-
