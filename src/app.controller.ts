@@ -1,8 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Public } from './common/decorators/public.decorator';
-
-@ApiTags('Application')
+// src/app.controller.ts
+import { Public } from './core/common/decorators/public.decorator'; // Fixed path@ApiTags('Application')
 @Controller()
 export class AppController {
   @Public()
