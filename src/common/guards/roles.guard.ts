@@ -23,12 +23,34 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const hasRole = requiredRoles.some(role => user.role === role);
+    // DEBUG: Log the user object to see what's available
+    console.log('=== ROLES GUARD DEBUG ===');
+    console.log('User object:', user);
+    console.log('User role:', user.role);
+    console.log('User role name:', user.role?.name);
+    console.log('Required roles:', requiredRoles);
+    console.log('=========================');
+
+    // FIX: Handle both string role and role object with name property
+    let userRoleName: string;
     
-    if (!hasRole) {
-      throw new ForbiddenException(`Required roles: ${requiredRoles.join(', ')}`);
+    if (typeof user.role === 'string') {
+      // Role is a string (e.g., 'ADMIN')
+      userRoleName = user.role;
+    } else if (user.role && typeof user.role === 'object' && user.role.name) {
+      // Role is an object with name property (e.g., { name: 'ADMIN' })
+      userRoleName = user.role.name;
+    } else {
+      throw new ForbiddenException('User role not found or invalid');
     }
 
+    const hasRole = requiredRoles.some(role => userRoleName === role);
+    
+    if (!hasRole) {
+      throw new ForbiddenException(`Required roles: ${requiredRoles.join(', ')}. Your role: ${userRoleName}`);
+    }
+
+    console.log(` Access granted for role: ${userRoleName}`);
     return true;
   }
 }

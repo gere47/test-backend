@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,219 +8,57 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  email        String   @unique
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  email        String    @unique
   passwordHash String
   firstName    String?
   lastName     String?
   phone        String?
   roleId       Int
-  role         Role     @relation(fields: [roleId], references: [id])
-  isActive     Boolean  @default(true)
+  role         Role      @relation(fields: [roleId], references: [id])
+  isActive     Boolean   @default(true)
   lastLogin    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Relations
-  students Student[]
-  classes  Class[]  @relation("ClassTeacher")
-  studentDocuments StudentDocument[] @relation("UploadedStudentDocuments")
-  examResults      ExamResult[]      @relation("EnteredResults")
-  verifiedResults  ExamResult[]      @relation("VerifiedResults")
-  recordedAttendances Attendance[] @relation("RecordedAttendances")
-  createdExams        Exam[]       @relation("CreatedExams")
-  
-  // Add missing opposite relations for new models
-  sessions  UserSession[]
-  auditLogs AuditLog[]
+  createdStudents     Student[]           @relation("StudentCreatedBy")
+  assignedClasses     Class[]             @relation("ClassTeachers")
+  studentDocuments    StudentDocument[]
+  examResults         ExamResult[]        @relation("EnteredExamResults")
+  verifiedResults     ExamResult[]        @relation("VerifiedExamResults")
+  recordedAttendances Attendance[]
+  createdExams        Exam[]
+  userSessions        UserSession[]
+  auditLogs           AuditLog[]
+  admissionTests      AdmissionTest[]
+  teacherAssignments  TeacherAssignment[] @relation("UserTeacherAssignments")
 }
 
 model Role {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?
-  permissions Json?
-  isSystem    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  users User[]
-  modulePermissions ModulePermission[]  // Add this for ModulePermission relation
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  description       String?
+  isSystem          Boolean            @default(false)
+  permissions       Json?
+  users             User[]
+  modulePermissions ModulePermission[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
-
-model AcademicSession {
-  id            Int      @id @default(autoincrement())
-  name          String   @unique
-  startDate     DateTime
-  endDate       DateTime
-  isActive      Boolean  @default(true)
-  admissionOpen Boolean  @default(false)
-  description   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  students Student[]
-  classes  Class[]
-  admissionSessions AdmissionSession[]
-}
-
-model AdmissionSession {
-  id                Int      @id @default(autoincrement())
-  name              String
-  academicSessionId Int
-  startDate         DateTime
-  endDate           DateTime
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  academicSession   AcademicSession @relation(fields: [academicSessionId], references: [id])
-  admissionClasses  AdmissionClass[]
-}
-
-model AdmissionClass {
-  id                  Int              @id @default(autoincrement())
-  admissionSessionId  Int
-  classId             Int
-  availableSeats      Int
-  appliedSeats        Int              @default(0)
-  status              String           @default("open")
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-
-  // Relations
-  admissionSession AdmissionSession @relation(fields: [admissionSessionId], references: [id])
-  class            Class            @relation(fields: [classId], references: [id])
-}
-
-model Class {
-  id              Int      @id @default(autoincrement())
-  name            String
-  section         String?
-  capacity        Int?
-  sessionId       Int
-  classTeacherId  Int?
-  roomNumber      String?
-  status          String   @default("active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  session        AcademicSession @relation(fields: [sessionId], references: [id])
-  classTeacher   User?           @relation("ClassTeacher", fields: [classTeacherId], references: [id])
-  students       Student[]
-  admissionClasses AdmissionClass[]
-  attendances    Attendance[]
-  exams          Exam[]
-}
-
-model Student {
-  id                  Int      @id @default(autoincrement())
-  studentId           String   @unique
-  userId              Int?     @unique
-  admissionNumber     String?
-  admissionDate       DateTime?
-  firstName           String
-  lastName            String
-  dateOfBirth         DateTime
-  gender              String
-  email               String   @unique
-  phone               String   @unique
-  address             String?
-  city                String?
-  state               String?
-  pincode             String?
-  nationality         String?
-  guardianName        String?
-  guardianRelation    String?
-  guardianEmail       String?
-  guardianPhone       String?
-  guardianOccupation  String?
-  classId             Int?
-  sessionId           Int?
-  status              String?  @default("Active")
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  // Relations
-  user                User?                 @relation(fields: [userId], references: [id])
-  class               Class?                @relation(fields: [classId], references: [id])
-  session             AcademicSession?      @relation(fields: [sessionId], references: [id])
-  educationalBackgrounds EducationalBackground[]
-  documents           StudentDocument[]
-  attendances         Attendance[]
-  examResults         ExamResult[]
-}
-
-model EducationalBackground {
-  id              Int      @id @default(autoincrement())
-  studentId       Int
-  institution     String
-  qualification   String
-  yearCompleted   Int
-  percentage      Float?
-  board           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-}
-
-model StudentDocument {
-  id            Int      @id @default(autoincrement())
-  studentId     Int
-  documentType  String
-  fileName      String
-  fileUrl       String
-  fileSize      Int
-  mimeType      String
-  uploadedBy    Int
-  uploadedAt    DateTime @default(now())
-  status        String   @default("active")
-
-  // Relations
-  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  uploadedByUser User  @relation("UploadedStudentDocuments", fields: [uploadedBy], references: [id])
-}
-
-model Attendance {
-  id          Int      @id @default(autoincrement())
-  studentId   Int
-  classId     Int
-  date        DateTime
-  status      String   // present, absent, late, half-day
-  remarks     String?
-  recordedBy  Int
-  recordedAt  DateTime @default(now())
-
-  // Relations
-  student Student @relation(fields: [studentId], references: [id])
-  class   Class   @relation(fields: [classId], references: [id])
-  recordedByUser User @relation("RecordedAttendances", fields: [recordedBy], references: [id])
-}
-
-// ========== AUTHENTICATION & AUTHORIZATION MODELS ==========
 
 model Module {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
+  id          Int                @id @default(autoincrement())
+  name        String
   description String?
   path        String?
   icon        String?
-  order       Int      @default(0)
-  isActive    Boolean  @default(true)
-  isSystem    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  order       Int                @default(0)
+  isActive    Boolean            @default(true)
   permissions ModulePermission[]
-
-  @@map("modules")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }
 
 model ModulePermission {
@@ -234,15 +69,12 @@ model ModulePermission {
   canCreate Boolean  @default(false)
   canEdit   Boolean  @default(false)
   canDelete Boolean  @default(false)
-  canManage Boolean  @default(false)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  role   Role   @relation(fields: [roleId], references: [id])
-  module Module @relation(fields: [moduleId], references: [id])
-
   @@unique([roleId, moduleId])
-  @@map("module_permissions")
 }
 
 model UserSession {
@@ -257,8 +89,6 @@ model UserSession {
   updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
-
-  @@map("user_sessions")
 }
 
 model AuditLog {
@@ -267,27 +97,261 @@ model AuditLog {
   action      String
   entityType  String
   entityId    Int
-  description String?
-  ipAddress   String?
-  userAgent   String?
+  description String
+  oldValues   Json?
+  newValues   Json?
   timestamp   DateTime @default(now())
-  
+
   user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
 }
 
-// ========== EXAM MODELS ==========
+model AcademicSession {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
 
-model Subject {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  code        String   @unique
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Relations
+  students                   Student[]
+  exams                      Exam[]
+  reportCards                ReportCard[]
+  attendanceSummaries        AttendanceSummary[]
+  classAutoAssignmentConfigs ClassAutoAssignmentConfig[]
+  admissionClasses           AdmissionClass[]
+  Class                      Class[]
 
-  examSubjects ExamSubject[]
-  examResults  ExamResult[]
+  @@map("academic_sessions")
+}
+
+model Class {
+  id       Int     @id @default(autoincrement())
+  name     String
+  grade    String?
+  section  String?
+  capacity Int?
+
+  // Academic session this class belongs to
+  academicSessionId Int?
+  academicSession   AcademicSession? @relation(fields: [academicSessionId], references: [id])
+
+  // Relations
+  students            Student[]
+  teacherAssignments  TeacherAssignment[] @relation("ClassTeacherAssignments")
+  teachers            User[]              @relation("ClassTeachers")
+  exams               Exam[]
+  reportCards         ReportCard[]
+  attendanceSummaries AttendanceSummary[]
+  attendanceRecords   Attendance[]
+  admissionClasses    AdmissionClass[]
+
+  @@map("classes")
+}
+
+model Student {
+  id                   Int      @id @default(autoincrement())
+  studentId            String   @unique
+  firstName            String
+  lastName             String
+  dateOfBirth          DateTime
+  gender               String
+  email                String?  @unique
+  phone                String?
+  identificationNumber String?  @unique
+  address              String?
+  city                 String?
+  state                String?
+  pincode              String?
+  nationality          String?
+
+  // Guardian Information
+  guardianName       String
+  guardianPhone      String
+  guardianEmail      String?
+  guardianRelation   String
+  guardianOccupation String?
+  guardianAddress    String?
+
+  // Educational Background
+  previousSchool       String?
+  lastGradeCompleted   String?
+  previousAcademicYear String?
+  lastGradeMarks       String?
+
+  // Admission Details
+  admissionTestDate   DateTime?
+  admissionTestScore  Float?
+  admissionTestResult String?
+  admissionRemarks    String?
+  admissionCategory   String?
+
+  // Academic Information
+  sessionId Int
+  classId   Int?
+  section   String?
+  status    String  @default("PENDING")
+  remarks   String?
+
+  // System Fields
+  admissionDate DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  createdBy     Int?
+  updatedBy     Int?
+  deletedBy     Int?
+
+  // Relations
+  session                AcademicSession         @relation(fields: [sessionId], references: [id])
+  class                  Class?                  @relation(fields: [classId], references: [id])
+  createdByUser          User?                   @relation("StudentCreatedBy", fields: [createdBy], references: [id])
+  documents              StudentDocument[]
+  examResults            ExamResult[]
+  grades                 Grade[]
+  reportCards            ReportCard[]
+  attendance             Attendance[]
+  attendanceSummaries    AttendanceSummary[]
+  admissionTests         AdmissionTest[]
+  educationalBackgrounds EducationalBackground[]
+
+  @@map("students")
+}
+
+model AdmissionTest {
+  id        Int       @id @default(autoincrement())
+  studentId Int
+  testType  String?
+  score     Float?
+  testDate  DateTime?
+  remarks   String?
+  createdAt DateTime  @default(now())
+  createdBy Int
+
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdByUser User    @relation(fields: [createdBy], references: [id])
+
+  @@map("admission_tests")
+}
+
+model ClassAutoAssignmentConfig {
+  id        Int      @id @default(autoincrement())
+  sessionId Int
+  criteria  Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  academicSession AcademicSession @relation(fields: [sessionId], references: [id])
+}
+
+model EducationalBackground {
+  id            Int      @id @default(autoincrement())
+  studentId     Int
+  institution   String
+  qualification String
+  yearCompleted Int
+  grade         String?
+  createdAt     DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("educational_backgrounds")
+}
+
+model StudentInquiry {
+  id              Int      @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  interestedClass String
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+}
+
+model StudentDocument {
+  id           Int      @id @default(autoincrement())
+  studentId    Int
+  documentType String
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  mimeType     String
+  description  String?
+  uploadedBy   Int
+  uploadedAt   DateTime @default(now())
+
+  student        Student @relation(fields: [studentId], references: [id])
+  uploadedByUser User    @relation(fields: [uploadedBy], references: [id])
+
+  @@map("student_documents")
+}
+
+// schema.prisma (snippet - merge into your file)
+model Attendance {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  classId    Int
+  date       DateTime
+  status     String
+  subjectId  Int?
+  recordedBy Int
+  remarks    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  student        Student  @relation(fields: [studentId], references: [id])
+  class          Class    @relation(fields: [classId], references: [id])
+  subject        Subject? @relation(fields: [subjectId], references: [id])
+  recordedByUser User     @relation(fields: [recordedBy], references: [id])
+
+  // FIX: remove nullable subjectId from uniqueness to avoid NULL duplicates
+  @@unique([studentId, classId, date])
+  @@map("attendance")
+}
+
+model Holiday {
+  id        Int      @id @default(autoincrement())
+  name      String
+  date      DateTime @unique
+  createdAt DateTime @default(now())
+}
+
+model AttendanceSummary {
+  id                Int      @id @default(autoincrement())
+  studentId         Int
+  classId           Int
+  academicSessionId Int
+  month             Int
+  year              Int
+  totalDays         Int
+  presentDays       Int
+  absentDays        Int
+  lateDays          Int
+  halfDays          Int
+  percentage        Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  student         Student         @relation(fields: [studentId], references: [id])
+  class           Class           @relation(fields: [classId], references: [id])
+  academicSession AcademicSession @relation(fields: [academicSessionId], references: [id])
+
+  @@unique([studentId, classId, academicSessionId, month, year], name: "student_month_summary")
+  @@map("attendance_summary")
+}
+
+model TeacherAssignment {
+  id        Int      @id @default(autoincrement())
+  teacherId Int
+  classId   Int
+  subjectId Int?
+  createdAt DateTime @default(now())
+
+  teacher User     @relation("UserTeacherAssignments", fields: [teacherId], references: [id])
+  class   Class    @relation("ClassTeacherAssignments", fields: [classId], references: [id])
+  subject Subject? @relation("SubjectTeacherAssignments", fields: [subjectId], references: [id])
 }
 
 model ExamType {
@@ -301,32 +365,40 @@ model ExamType {
   updatedAt   DateTime @updatedAt
 
   exams Exam[]
-
-  @@map("exam_types")
 }
 
 model Exam {
-  id           Int      @id @default(autoincrement())
-  name         String
-  examTypeId   Int
-  classId      Int
-  academicYear String
-  term         String
-  startDate    DateTime
-  endDate      DateTime
-  description  String?
-  isPublished  Boolean  @default(false)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  name              String
+  examTypeId        Int
+  classId           Int
+  academicSessionId Int
+  academicYear      String
+  term              String
+  startDate         DateTime
+  endDate           DateTime
+  description       String?
+  isPublished       Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  status            String   @default("SCHEDULED")
+  totalWeightage    Decimal? @db.Decimal(5, 2)
+  passingCriteria   String?
+  instructions      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  examType     ExamType      @relation(fields: [examTypeId], references: [id])
-  class        Class         @relation(fields: [classId], references: [id])
-  createdBy    Int
-  createdByUser User         @relation("CreatedExams", fields: [createdBy], references: [id])
-  examSubjects ExamSubject[]
-  examResults  ExamResult[]
+  examType        ExamType        @relation(fields: [examTypeId], references: [id])
+  class           Class           @relation(fields: [classId], references: [id])
+  academicSession AcademicSession @relation(fields: [academicSessionId], references: [id])
+  createdBy       Int
+  createdByUser   User            @relation(fields: [createdBy], references: [id])
+  examSubjects    ExamSubject[]
+  examResults     ExamResult[]
+  grades          Grade[]
+  reportCards     ReportCard[]
 
+  @@index([classId, academicSessionId, term])
+  @@index([startDate, endDate])
   @@index([classId, academicYear, term])
   @@map("exams")
 }
@@ -354,7 +426,6 @@ model ExamSubject {
   subject Subject @relation(fields: [subjectId], references: [id])
 
   @@unique([examId, subjectId])
-  @@map("exam_subjects")
 }
 
 model ExamResult {
@@ -379,12 +450,62 @@ model ExamResult {
   exam           Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
   student        Student @relation(fields: [studentId], references: [id])
   subject        Subject @relation(fields: [subjectId], references: [id])
-  enteredByUser  User    @relation("EnteredResults", fields: [enteredBy], references: [id])
-  verifiedByUser User?   @relation("VerifiedResults", fields: [verifiedBy], references: [id])
+  enteredByUser  User    @relation("EnteredExamResults", fields: [enteredBy], references: [id])
+  verifiedByUser User?   @relation("VerifiedExamResults", fields: [verifiedBy], references: [id])
 
   @@unique([examId, studentId, subjectId])
   @@index([studentId, examId])
-  @@map("exam_results")
+}
+
+model Grade {
+  id            Int      @id @default(autoincrement())
+  studentId     Int
+  examId        Int
+  subjectId     Int
+  marksObtained Decimal  @db.Decimal(5, 2)
+  maxMarks      Decimal  @db.Decimal(5, 2)
+  grade         String
+  gradePoint    Decimal? @db.Decimal(3, 2)
+  percentage    Decimal  @db.Decimal(5, 2)
+  isPassed      Boolean  @default(true)
+  remarks       String?
+
+  student Student @relation(fields: [studentId], references: [id])
+  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, examId, subjectId])
+  @@index([studentId, examId])
+  @@index([subjectId, examId])
+}
+
+model ReportCard {
+  id                Int       @id @default(autoincrement())
+  studentId         Int
+  examId            Int
+  classId           Int
+  academicSessionId Int
+  totalMarks        Decimal   @db.Decimal(6, 2)
+  obtainedMarks     Decimal   @db.Decimal(6, 2)
+  percentage        Decimal   @db.Decimal(5, 2)
+  finalGrade        String
+  rank              Int?
+  remarks           String?
+  isPublished       Boolean   @default(false)
+  publishedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  student         Student         @relation(fields: [studentId], references: [id])
+  exam            Exam            @relation(fields: [examId], references: [id])
+  class           Class           @relation(fields: [classId], references: [id])
+  academicSession AcademicSession @relation(fields: [academicSessionId], references: [id])
+
+  @@unique([studentId, examId])
+  @@index([studentId, academicSessionId])
 }
 
 model GradeScale {
@@ -397,6 +518,33 @@ model GradeScale {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
 
-  @@map("grade_scales")
+model Subject {
+  id          Int     @id @default(autoincrement())
+  name        String
+  code        String? @unique
+  description String?
+
+  teacherAssignments TeacherAssignment[] @relation("SubjectTeacherAssignments")
+  examSubjects       ExamSubject[]
+  examResults        ExamResult[]
+  grades             Grade[]
+  attendanceRecords  Attendance[]
+
+  @@map("subjects")
+}
+
+model AdmissionClass {
+  id                 Int      @id @default(autoincrement())
+  admissionSessionId Int
+  classId            Int
+  availableSeats     Int
+  appliedSeats       Int      @default(0)
+  status             String   @default("open")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  academicSession AcademicSession @relation(fields: [admissionSessionId], references: [id])
+  class           Class           @relation(fields: [classId], references: [id])
 }

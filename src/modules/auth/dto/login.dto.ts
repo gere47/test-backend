@@ -1,122 +1,32 @@
-// // // // import { IsString, IsNotEmpty, MinLength } from 'class-validator';
-// // // // import { ApiProperty } from '@nestjs/swagger';
-
-// // // // export class LoginDto {
-// // // //   @ApiProperty({ 
-// // // //     example: 'superadmin', 
-// // // //     description: 'Username or email address' 
-// // // //   })
-// // // //   @IsString()
-// // // //   @IsNotEmpty()
-// // // //   username: string;
-
-// // // //   @ApiProperty({ 
-// // // //     example: 'Admin123!', 
-// // // //     description: 'User password' 
-// // // //   })
-// // // //   @IsString()
-// // // //   @IsNotEmpty()
-// // // //   @MinLength(6)
-// // // //   password: string;
-// // // // }
-
-// // // import { ApiProperty } from '@nestjs/swagger';
-// // // import { IsEmail, IsString, MinLength } from 'class-validator';
-
-// // // export class LoginDto {
-// // //   @ApiProperty({
-// // //     description: 'Registered email address',
-// // //     example: 'admin@sophorerp.edu',
-// // //     required: true,
-// // //   })
-// // //   @IsEmail()
-// // //   email: string;
-
-// // //   @ApiProperty({
-// // //     description: 'User password (min 6 characters)',
-// // //     example: 'password123',
-// // //     minLength: 6,
-// // //     required: true,
-// // //   })
-// // //   @IsString()
-// // //   @MinLength(6)
-// // //   password: string;
-// // // }
-
-// // import { ApiProperty } from '@nestjs/swagger';
-// // import { IsString, MinLength, IsNotEmpty } from 'class-validator';
-
-// // export class LoginDto {
-// //   @ApiProperty({
-// //     description: 'Username (can be email, phone, or custom username)',
-// //     example: 'admin',
-// //     required: true,
-// //   })
-// //   @IsString()
-// //   @IsNotEmpty()
-// //   username: string;
-
-// //   @ApiProperty({
-// //     description: 'User password (min 6 characters)',
-// //     example: 'admin123',
-// //     minLength: 6,
-// //     required: true,
-// //   })
-// //   @IsString()
-// //   @MinLength(6)
-// //   password: string;
-// // }
-// import { ApiProperty } from '@nestjs/swagger';
-// import { IsString, MinLength, IsNotEmpty } from 'class-validator';
-
-// export class LoginDto {
-//   @ApiProperty({
-//     description: 'Username for login',
-//     example: 'admin',
-//     required: true,
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   username: string;
-
-//   @ApiProperty({
-//     description: 'Password (min 6 characters)',
-//     example: 'admin123',
-//     minLength: 6,
-//     required: true,
-//   })
-//   @IsString()
-//   @MinLength(6)
-//   password: string;
-// }
 
 
-// import { IsString, IsNotEmpty, MinLength } from 'class-validator';
-// import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEmail, MinLength, IsOptional, validateSync, ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface, registerDecorator } from 'class-validator';
 
-// export class LoginDto {
-//   @ApiProperty({ 
-//     example: 'superadmin', 
-//     description: 'Username or email address' 
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   username: string;
+@ValidatorConstraint({ name: 'emailOrUsername', async: false })
+class EmailOrUsernameConstraint implements ValidatorConstraintInterface {
+  validate(value: any, args: ValidationArguments) {
+    const object = args.object as any;
+    return !!(object.email || object.username);
+  }
 
-//   @ApiProperty({ 
-//     example: 'Admin123!', 
-//     description: 'User password' 
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   @MinLength(6)
-//   password: string;
-// }
+  defaultMessage(args: ValidationArguments) {
+    return 'Either email or username must be provided';
+  }
+}
 
-import { IsString, IsEmail, MinLength, IsOptional } from 'class-validator';
+function EmailOrUsername(validationOptions?: any) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: EmailOrUsernameConstraint,
+    });
+  };
+}
 
 export class LoginDto {
-  // 🚨 MAKE BOTH OPTIONAL AND ACCEPT EITHER
   @IsOptional()
   @IsEmail()
   email?: string;
@@ -128,4 +38,7 @@ export class LoginDto {
   @IsString()
   @MinLength(6)
   password: string;
+
+  @EmailOrUsername()
+  emailOrUsername: string; // This property doesn't need to exist, it's just for validation
 }

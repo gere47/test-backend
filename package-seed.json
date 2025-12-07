@@ -1,0 +1,7 @@
+﻿{
+  "name": "school-erp-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+}

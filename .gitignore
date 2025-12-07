@@ -1,4 +1,4 @@
-﻿### TYPESCRIPT BUILD OUTPUTS ###
+﻿# ### TYPESCRIPT BUILD OUTPUTS ###
 dist/
 build/
 *.js
@@ -48,3 +48,7 @@ Thumbs.db
 ### TEMPORARY ###
 tmp/
 temp/
+
+### BACKUP FOLDERS (your custom folders) ###
+backup_preserve/
+backup_preserved/

@@ -7,23 +7,23 @@ export function setupSwagger(app: INestApplication): void {
     .setDescription(`
 # 🎓 Sophor Technologies ERP - Complete School Management System
 
-## 📚 API Documentation
+##  API Documentation
 
 Welcome to the ERP School Management System API documentation. This API provides comprehensive endpoints for managing all aspects of a school's operations, from student admission to financial management.
 
-// ### 🔐 Authentication & Authorization
+// ###  Authentication & Authorization
 // - **JWT Token-based** authentication system
 // - **Role-Based Access Control (RBAC)** with fine-grained permissions
 // - **Module-level permissions** for each user role
 // - **Session management** with device tracking
 
-// ### 👥 User Management & Roles
+// ### User Management & Roles
 // - **7 Predefined Roles**: super_admin, admin, teacher, student, parent, accountant, librarian
 // - **User registration** with role assignment
 // - **Profile management** and password security
 // - **Active session tracking** and management
 
-// ### 📦 System Modules
+// ###  System Modules
 // The system is organized into 12 core modules based on the SRS:
 
 // | Module | Description | Key Features |
@@ -41,7 +41,7 @@ Welcome to the ERP School Management System API documentation. This API provides
 // | **Inventory Management** | Asset tracking | Stock management, depreciation |
 // | **Reports & Analytics** | Data analysis | Custom reports, dashboards, exports |
 
-// ### 🚀 Quick Start Guide
+// ###  Quick Start Guide
 
 // 1. **Authentication**
 //    - Register a new user or use default credentials
@@ -58,7 +58,7 @@ Welcome to the ERP School Management System API documentation. This API provides
 //    - Include JWT token in Authorization header for all requests
 //    - Check user permissions before accessing module-specific endpoints
 
-// ### 🔒 Security Features
+// ###  Security Features
 // - **JWT tokens** with 24-hour expiration
 // - **Password hashing** using bcrypt with 12 rounds
 // - **Rate limiting** to prevent abuse
@@ -66,7 +66,7 @@ Welcome to the ERP School Management System API documentation. This API provides
 // - **Input validation** using class-validator
 // - **Audit logging** for all user actions
 
-// ### 📊 Response Format
+// ###  Response Format
 // All API responses follow a consistent format:
 // \`\`\`json
 // {
@@ -76,7 +76,7 @@ Welcome to the ERP School Management System API documentation. This API provides
 // }
 // \`\`\`
 
-// ### 🛠️ Error Handling
+// ###  Error Handling
 // The API uses standard HTTP status codes:
 
 // | Code | Description |
@@ -91,7 +91,7 @@ Welcome to the ERP School Management System API documentation. This API provides
 // | 429 | Too Many Requests - Rate limit exceeded |
 // | 500 | Internal Server Error |
 
-// ### 🌐 Deployment
+// ###  Deployment
 // - **Production URL**: https://your-app.onrender.com
 // - **API Base**: \`/api/v1\`
 // - **Documentation**: \`/api/docs\`
@@ -107,7 +107,7 @@ Welcome to the ERP School Management System API documentation. This API provides
       'https://sophor-tech.com', 
       'support@sophor-tech.com'
     )
-    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
+    .setLicense('Sophor', 'https://opensource.org/licenses/Sophor')
     .addBearerAuth(
       {
         type: 'http',
@@ -124,9 +124,9 @@ Welcome to the ERP School Management System API documentation. This API provides
     .addTag('Authentication', 'User authentication, registration, and session management')
     .addTag('Users Management', 'User management, role assignment, and user statistics')
     .addTag('Modules Management', 'System modules and permission management')
-    .addTag('Students', 'Student admission and management (Coming Soon)')
-    .addTag('Attendance', 'Attendance tracking and management (Coming Soon)')
-    .addTag('Grades', 'Examination and grade management (Coming Soon)')
+    .addTag('Students', 'Student admission and management ')
+    .addTag('Attendance', 'Attendance tracking and management ')
+    .addTag('Grades', 'Examination and grade management ')
     .addTag('HR & Payroll', 'Human resources and payroll management (Coming Soon)')
     .addTag('Fees', 'Fee collection and accounting (Coming Soon)')
     .addTag('Library', 'Library books and resources management (Coming Soon)')

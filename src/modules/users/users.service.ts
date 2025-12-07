@@ -1,240 +1,238 @@
-// src/modules/users/users.service.ts - COMPLETELY FIXED VERSION
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(page: number, limit: number, search: string, roleId?: number) {
-    try {
-      const skip = (page - 1) * limit;
-      const where: any = {};
-
-      if (search) {
-        where.OR = [
-          { username: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
-      if (roleId) {
-        where.roleId = roleId;
-      }
-
-      const [users, total] = await Promise.all([
-        this.prisma.user.findMany({
-          where,
-          include: {
-            role: true,
-          },
-          skip,
-          take: limit,
-          orderBy: { createdAt: 'desc' },
-        }),
-        this.prisma.user.count({ where }),
-      ]);
-
-      return {
-        data: users,
-        meta: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      };
-    } catch (error) {
-      throw new Error('Failed to fetch users');
-    }
+  /** Remove sensitive fields before sending to client */
+  private toResponse(user: any) {
+    if (!user) return null;
+    const { passwordHash, ...clean } = user;
+    return clean;
   }
 
+  // GET ALL USERS (WITH PROJECT MANAGER'S RESPONSE STANDARD)
+  async findAll(query: any) {
+    const page = Number(query.page) || 1;
+    const page_size = Number(query.page_size) || Number(query.limit) || 10;
+    const search = query.search || '';
+    const role = query.role || '';
+    const status = query.status || '';
+
+    const skip = (page - 1) * page_size;
+
+    const where: any = {};
+
+    // Search filtering
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Filter by role
+    if (role) where.roleId = Number(role);
+
+    // Filter by status
+    if (status) where.isActive = status === 'active';
+
+    const [list, count] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        skip,
+        take: page_size,
+        orderBy: { id: 'desc' },
+        include: { role: true },
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    const total_pages = Math.ceil(count / page_size);
+
+    // ✔ FIXED: Proper BASE_URL handling
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+
+    return {
+      count,
+      total_pages,
+      current_page: page,
+      next:
+        page < total_pages
+          ? `${baseUrl}/users?page=${page + 1}&page_size=${page_size}`
+          : null,
+      previous:
+        page > 1
+          ? `${baseUrl}/users?page=${page - 1}&page_size=${page_size}`
+          : null,
+      page_size,
+      data: list.map((u) => this.toResponse(u)),
+    };
+  }
+
+  // GET ONE USER
   async findOne(id: number) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id },
-        include: {
-          role: true,
-        },
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      return user;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new Error('Failed to fetch user');
+    if (!id || isNaN(id)) {
+      throw new BadRequestException('Invalid user ID');
     }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { role: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return this.toResponse(user);
   }
 
-  async update(id: number, updateUserDto: any, currentUserId: number) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id },
+  // CREATE USER
+  async create(dto: CreateUserDto) {
+    const emailExists = await this.prisma.user.findFirst({
+      where: { email: dto.email },
+    });
+
+    if (emailExists) throw new ConflictException('Email already exists');
+
+    const user = await this.prisma.user.create({
+      data: {
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        email: dto.email,
+        username: dto.username,
+        phone: dto.phone,
+        passwordHash: dto.passwordHash, // Already hashed
+        role: {
+          connect: { id: dto.roleId },
+        },
+      },
+      include: { role: true },
+    });
+
+    return this.toResponse(user);
+  }
+
+  // UPDATE USER
+  async update(id: number, dto: UpdateUserDto, currentUserId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (id === currentUserId) {
+      throw new BadRequestException('You cannot update your own account');
+    }
+
+    // Check duplicate email
+    if (dto.email && dto.email !== user.email) {
+      const emailExists = await this.prisma.user.findFirst({
+        where: { email: dto.email },
       });
+      if (emailExists) throw new ConflictException('Email already exists');
+    }
 
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        email: dto.email,
+        phone: dto.phone,
+        roleId: dto.roleId,
+      },
+      include: { role: true },
+    });
 
-      // Prevent users from modifying their own account
-      if (id === currentUserId) {
-        throw new BadRequestException('Cannot modify your own account');
-      }
+    return this.toResponse(updated);
+  }
 
-      // Check for duplicate email if email is being updated
-      if (updateUserDto.email && updateUserDto.email !== user.email) {
-        const existingUser = await this.prisma.user.findFirst({
-          where: { email: updateUserDto.email },
+  // DEACTIVATE USER
+  async deactivate(id: number, reason: string, currentUserId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (id === currentUserId) {
+      throw new BadRequestException('You cannot deactivate yourself');
+    }
+
+    if (user.roleId === 1) {
+      throw new BadRequestException('Super Admin cannot be deactivated');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { isActive: false },
+      include: { role: true },
+    });
+
+    return this.toResponse(updated);
+  }
+
+  // ACTIVATE USER
+  async activate(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { isActive: true },
+      include: { role: true },
+    });
+
+    return this.toResponse(updated);
+  }
+
+  // LIST ROLES
+  async getRoles() {
+    return this.prisma.role.findMany({
+      orderBy: { id: 'asc' },
+    });
+  }
+
+  // USER STATS
+  async getUserStats() {
+    const totalUsers = await this.prisma.user.count();
+
+    const grouped = await this.prisma.user.groupBy({
+      by: ['roleId'],
+      _count: { _all: true },
+    });
+
+    const roleStats = await Promise.all(
+      grouped.map(async (group) => {
+        const role = await this.prisma.role.findUnique({
+          where: { id: group.roleId },
         });
 
-        if (existingUser) {
-          throw new ConflictException('Email already exists');
-        }
-      }
+        return {
+          roleId: group.roleId,
+          roleName: role?.name || 'Unknown',
+          count: group._count._all,
+        };
+      }),
+    );
 
-      return await this.prisma.user.update({
-        where: { id },
-        data: updateUserDto,
-        include: {
-          role: true,
-        },
-      });
-    } catch (error) {
-      if (error instanceof NotFoundException || 
-          error instanceof ConflictException || 
-          error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new Error('Failed to update user');
-    }
-  }
+    const recentUsers = await this.prisma.user.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: { role: true },
+    });
 
-  async deactivate(id: number, reason: string, currentUserId: number) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id },
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      // Prevent users from deactivating their own account
-      if (id === currentUserId) {
-        throw new BadRequestException('Cannot deactivate your own account');
-      }
-
-      // Prevent deactivating system admin accounts
-      if (user.roleId === 1) { // Assuming 1 is super_admin role ID
-        throw new BadRequestException('Cannot deactivate system administrator accounts');
-      }
-
-      // FIXED: Only update isActive field (remove all other unsupported fields)
-      return await this.prisma.user.update({
-        where: { id },
-        data: {
-          isActive: false,
-        },
-      });
-    } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new Error('Failed to deactivate user');
-    }
-  }
-
-  async activate(id: number, currentUserId: number) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id },
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      // FIXED: Only update isActive field (remove all other unsupported fields)
-      return await this.prisma.user.update({
-        where: { id },
-        data: {
-          isActive: true,
-        },
-      });
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new Error('Failed to activate user');
-    }
-  }
-
-  async getRoles() {
-    try {
-      const roles = await this.prisma.role.findMany({
-        orderBy: { id: 'asc' },
-      });
-
-      return {
-        data: roles,
-        total: roles.length,
-      };
-    } catch (error) {
-      throw new Error('Failed to fetch roles');
-    }
-  }
-
-  async getUserStats() {
-    try {
-      const totalUsers = await this.prisma.user.count();
-      
-      const roleStats = await this.prisma.user.groupBy({
-        by: ['roleId'],
-        _count: {
-          _all: true,
-        },
-      });
-
-      // Enhance role stats with role names
-      const enhancedRoleStats = await Promise.all(
-        roleStats.map(async (stat) => {
-          const role = await this.prisma.role.findUnique({
-            where: { id: stat.roleId },
-            select: { name: true },
-          });
-          return {
-            roleId: stat.roleId,
-            roleName: role?.name || 'Unknown',
-            count: stat._count._all,
-          };
-        })
-      );
-
-      const recentUsers = await this.prisma.user.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          role: {
-            select: { name: true },
-          },
-        },
-      });
-
-      return {
-        totalUsers,
-        roleStats: enhancedRoleStats,
-        recentUsers,
-      };
-    } catch (error) {
-      throw new Error('Failed to fetch user statistics');
-    }
+    return {
+      totalUsers,
+      roleStats,
+      recentUsers: recentUsers.map((u) => this.toResponse(u)),
+    };
   }
 }
